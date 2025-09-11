@@ -2,11 +2,9 @@ import './App.css';
 import AddMovie from './AddMovie';
 import Register from './Register';
 import Login from './Login';
-import Home from './Home';
-import { Routes,Route} from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Portal from './Portal';
 import NotFound from './NotFound';
-import Movie from './Movie';
 import MovieList from './MovieList';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { useState } from 'react';
@@ -14,34 +12,65 @@ import Paper from '@mui/material/Paper';
 import MovieDetail from './MovieDetail';
 import EditMovie from './EditMovie';
 
+function Home() {
+  return (
+    <div className="home">
+      <h1>Welcome to Movie App</h1>
+      <p>Discover, explore, and add your favorite movies. Your ultimate movie companion.</p>
+    </div>
+  );
+}
+
+
+function ProtectedRoute({ children, isLoggedIn }) {
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
 
 function App() {
-  const[mode,setMode]=useState("dark");
-  const darkTheme = createTheme({
-    palette: {
-      mode: mode,
-    },
-  });
+  const [mode, setMode] = useState("dark");
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // start logged out
+
+  const darkTheme = createTheme({ palette: { mode } });
+
   return (
-    <div className="App">
-      <ThemeProvider theme={darkTheme}>
-        <Paper style={{minHeight:"100vh",borderRadius:"0%"}} elevation={9}>
-     
-      <Routes>
-      <Route path="/" element={<Login/>}/>
-        <Route path="/register" element={<Register/>}/>
-        <Route path="/Portal" element={<Portal mode={mode} setMode={setMode}/>}>
-          <Route path="home" element={<Home/>}/>
-          <Route path="addmovie" element={<AddMovie/>}/>//dont give slash to child node
-          <Route path="movie" element={<MovieList/>}/>
-          <Route path="edit/:id" element={<EditMovie/>}/>
-          <Route path="view/:id" element={<MovieDetail/>}/>
-        </Route>
-        <Route path="*" element={<NotFound/>}/>
-      </Routes>
+    <ThemeProvider theme={darkTheme}>
+      <Paper style={{ minHeight: "100vh", borderRadius: "0%" }} elevation={9}>
+        <Routes>
+         
+          <Route path="/" element={<Navigate to={isLoggedIn ? "/portal/home" : "/login"} replace />} />
+
+        
+          <Route
+            path="/login"
+            element={isLoggedIn ? <Navigate to="/portal/home" replace /> : <Login setIsLoggedIn={setIsLoggedIn} />}
+          />
+          <Route
+            path="/register"
+            element={isLoggedIn ? <Navigate to="/portal/home" replace /> : <Register />}
+          />
+
+          <Route
+            path="/portal"
+            element={
+              <ProtectedRoute isLoggedIn={isLoggedIn}>
+                <Portal mode={mode} setMode={setMode} setIsLoggedIn={setIsLoggedIn} />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="home" element={<Home />} />
+            <Route path="addmovie" element={<AddMovie />} />
+            <Route path="movie" element={<MovieList />} />
+            <Route path="edit/:id" element={<EditMovie />} />
+            <Route path="view/:id" element={<MovieDetail />} />
+          </Route>
+
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       </Paper>
-      </ThemeProvider>
-    </div>
+    </ThemeProvider>
   );
 }
 
